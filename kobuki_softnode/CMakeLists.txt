@@ -1,50 +1,43 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 project(kobuki_softnode)
 
-find_package(catkin REQUIRED COMPONENTS nav_msgs sensor_msgs geometry_msgs kobuki_msgs roscpp nodelet tf)
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
 
-catkin_package(
-   INCLUDE_DIRS include
-   LIBRARIES kobuki_softnode softkobuki_nodelet
-   CATKIN_DEPENDS nav_msgs sensor_msgs geometry_msgs kobuki_msgs roscpp nodelet tf
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+find_package(ament_cmake REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(kobuki_ros_interfaces REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
+
+include_directories(include)
+
+add_executable(fake_kobuki src/fake_kobuki.cpp)
+ament_target_dependencies(fake_kobuki geometry_msgs kobuki_ros_interfaces nav_msgs rclcpp sensor_msgs tf2 tf2_geometry_msgs tf2_ros)
+
+install(TARGETS
+	fake_kobuki
+	DESTINATION lib/${PROJECT_NAME}
 )
 
-include_directories(include ${catkin_INCLUDE_DIRS})
-
-add_library(kobuki_softnode src/library/fake_kobuki_ros.cpp
-                            src/library/fake_kobuki.cpp
-)
-target_link_libraries(kobuki_softnode ${catkin_LIBRARIES})
-add_dependencies(kobuki_softnode kobuki_msgs_gencpp)
-
-add_library(softkobuki_nodelet src/nodelet/kobuki_nodelet.cpp)
-target_link_libraries(softkobuki_nodelet kobuki_softnode)
-
-
-install(TARGETS kobuki_softnode
-        DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}/
 )
 
-install(TARGETS softkobuki_nodelet
-        DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+install(DIRECTORY
+  param
+  DESTINATION share/${PROJECT_NAME}/
 )
 
-
-install(DIRECTORY include/${PROJECT_NAME}/
-        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-)
-install(DIRECTORY plugins
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-
-install(DIRECTORY launch
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-
-install(DIRECTORY param
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-
-
-
-
+ament_package()
